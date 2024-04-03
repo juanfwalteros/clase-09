@@ -7,35 +7,100 @@ require(pacman)
 p_load(tidyverse,
        rio,
        data.table,
-       janitor)
+       janitor,
+       ggthemes)
 
 ## load data
-files <- list.files("input",recursive=T , full.names=T)
+list.files(".",recursive = T)
+files <- list.files("input",recursive=T,full.names = T)
 files
 
-## Cabecera - Caracter
-str_subset(files,"Cabecera - Car")
-cg <- import_list(str_subset(files,"Cabecera - Car")) %>% 
-      rbindlist(fill=T) %>% clean_names()
+## substraer un vector de caraters
+letras <- c("hola","papa","mapa")
+str_subset(string = letras , pattern = "p")
 
 ## Cabecera - Caracter
-str_subset(files,"Cabecera - Ocu")
-ocu <- import_list(str_subset(files,"Cabecera - Ocu")) %>% 
-       rbindlist(fill=T) %>% clean_names()
+str_subset(string = files , pattern = "Cabecera - Car")
+
+## importar vector de archvos
+all_db <- import_list(files)
+
+## Cabecera - Caracter
+cg <- import_list(file = str_subset(files,"Cabecera - Car")) %>%
+      rbindlist(use.names = T , fill = T) %>%
+      clean_names()
+
+## ocupados - Caracter
+ocu <- import_list(file = str_subset(files,"Cabecera - Ocu")) %>%
+       rbindlist(use.names = T , fill = T) %>%
+       clean_names()
 
 ## join
-geih <- left_join(x=cg , y=ocu , by=c("directorio","secuencia_p","orden","hogar"))
+db <- left_join(cg,ocu,c("directorio" ,"secuencia_p","orden","hogar"))
 
-## clean environment
-rm(list=ls())
-geih <- import("output/geih_2019_2021.rds")
+
+##==== Graficos base  ===###
+db <- import("output/geih_2019_2021.rds")
+
+## hist
+hist(db$p6040)
+
+## densidad
+plot(density(db$p6040))
 
 ## scatter plot
+plot(x = db$p6040 , y = db$inglabo)
+
+##=== ggplot2 ===##
+
+## grafico base de ggplot
+ggplot(data = db , mapping = aes(x=inglabo , y=p6040))
+
+## grafico sctaer
+ggplot(data = db , mapping = aes(y=inglabo , x=p6040)) +
+geom_point() 
+
+## plot by category
+ggplot(data = db , mapping = aes(y=inglabo , x=p6040 , color=as.factor(p6450))) +
+geom_point() 
+
+## guardar en un objeto
+grafico <- ggplot(data = db[1:1000,] , mapping = aes(y=inglabo , x=p6040 , color=as.factor(p6450))) +
+           geom_point() + 
+           labs(x="Edad" , y="Ingresos (pesos)" , color="Tipo contrato" , title="Ingreso vs Edad")
+
+## agregar un tema
+grafico <- grafico + theme_bw()
+
+## modificar elementos del tema
+grafico + theme(axis.title.x = element_text(size = 20 , colour = "red") , 
+                axis.text.x = element_text(size = 20) , 
+                plot.title = element_text(face = "bold" , size = 30 , hjust = 0.5))
+
+## Ingreso por sexo y departamento
+db %>% 
+group_by(p6020,p6450) %>%
+summarise(ing=mean(inglabo,na.rm = T)) %>%
+ggplot(mapping = aes(fill=as.factor(p6020), y=ing, x=as.factor(p6450))) + 
+geom_bar(position="dodge", stat="identity") + theme_bw()
 
 
-## Ingreso por sexo
 
 
-## Ingreso por sexo y tipo de contrato
+
+db %>% 
+group_by(dpto.x,p6020) %>%
+summarise(ing=mean(inglabo,na.rm = T)) %>%
+ggplot(mapping = aes(y=ing, x=as.factor(dpto.x))) + 
+geom_bar(position="dodge", stat="identity" , fill=alpha("darkblue",0.5) , color=NA) + 
+  facet_wrap("p6020") +
+  theme_bw()
+
+
+
+
+
+
+
 
 
