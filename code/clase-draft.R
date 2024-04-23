@@ -9,26 +9,28 @@ p_load(tidyverse,
        data.table,
        janitor,
        ggthemes)
-
-## load data
-list.files(".",recursive = T)
+  
 files <- list.files("input",recursive=T,full.names = T)
 files
 
 ## substraer un vector de caraters
 letras <- c("hola","papa","mapa")
+letras
+
 str_subset(string = letras , pattern = "p")
 
 ## Cabecera - Caracter
 str_subset(string = files , pattern = "Cabecera - Car")
 
-## importar vector de archvos
+## importar vector de archivos
 all_db <- import_list(files)
+all_db
 
 ## Cabecera - Caracter
 cg <- import_list(file = str_subset(files,"Cabecera - Car")) %>%
       rbindlist(use.names = T , fill = T) %>%
       clean_names()
+cg
 
 ## ocupados - Caracter
 ocu <- import_list(file = str_subset(files,"Cabecera - Ocu")) %>%
@@ -58,7 +60,7 @@ ggplot(data = db , mapping = aes(x=inglabo , y=p6040))
 
 ## grafico sctaer
 ggplot(data = db , mapping = aes(y=inglabo , x=p6040)) +
-geom_point() 
+geom_point(col = "gold") 
 
 ## plot by category
 ggplot(data = db , mapping = aes(y=inglabo , x=p6040 , color=as.factor(p6450))) +
